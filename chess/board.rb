@@ -48,7 +48,7 @@ class Board
     raise NoPieceAtPosition if piece.is_a?(NullPiece)
     @grid[x][y] = NullPiece.new
     x, y = end_pos
-    @grid[x][y] = piece
+    @grid[x][y] = piece.class.new(end_pos)
 
   end
 
@@ -64,7 +64,7 @@ class Board
 
   def place_piece(pos)
     x, y = pos
-    @grid[x][y] = Pawn.new
+    @grid[x][y] = Pawn.new(pos)
   end
 
   def in_bounds?(pos)

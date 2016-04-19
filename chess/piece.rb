@@ -10,8 +10,6 @@ class Piece
                   [1,2], [-1,2], [1,-2], [-1,-2],
                   [2,1], [-2,1], [2,-1], [-2,-1]
                   ]
-  # TEAM = {:white => "white",
-  #         :black => "black"}
 
   def initialize(pos, team, board)
     @pos = pos
@@ -174,24 +172,26 @@ class Pawn < Piece
     @direction == :up ? multiplier = -1 : multiplier = 1
 
     # check if can move double on first move
-    if @first_move
-      candidate_moves << [ @pos[1] , @pos[0] + 2*multiplier ]
+    one_space_away = [@pos[0] + multiplier, @pos[1] ]
+    two_spaces_away = [@pos[0] + 2*multiplier, @pos[1]]
+    if @first_move && @board[one_space_away].team == :null && @board[two_spaces_away].team == :null
+      candidate_moves << [ @pos[0] + 2*multiplier, @pos[1]  ]
     end
 
-    # right enemy check
-    new_pos = [@pos[1] + 1, @pos[0] + multiplier]
+    # left enemy check
+    new_pos = [@pos[0] + multiplier, @pos[1] - 1]
     if @board[new_pos].team != self.team && @board[new_pos].team != :null
       candidate_moves << new_pos
     end
 
-    # left enemy check
-    new_pos = [@pos[1] - 1, @pos[0] + multiplier]
+    # second corner enemy check
+    new_pos = [@pos[0] + multiplier, @pos[1] + 1]
     if @board[new_pos].team != self.team && @board[new_pos].team != :null
       candidate_moves << new_pos
     end
 
     # regular move
-    new_pos = [@pos[1], @pos[0] + multiplier]
+    new_pos = [@pos[0] + multiplier, @pos[1]]
     if @board[new_pos].team == :null
       candidate_moves << new_pos
     end

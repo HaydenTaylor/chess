@@ -32,10 +32,10 @@ class Board
   end
 
   def set_up_grid
-    place_other_pieces(0, :white, self)
-    place_row_pawns(1, :white, self)
-    place_row_pawns(6, :black, self)
-    place_other_pieces(7, :black, self)
+    place_other_pieces(0, :white)
+    place_row_pawns(1, :white)
+    place_row_pawns(6, :black)
+    place_other_pieces(7, :black)
   end
 
   # def get_input_and_move

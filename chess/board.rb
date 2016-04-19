@@ -13,11 +13,11 @@ class Board
     set_up_grid
   end
 
-  def place_row_pawns(row, color)
+  def place_row_pawns(row, color, direction)
     places = [[row,0], [row,1], [row,2], [row,3], [row,4], [row,5], [row,6], [row,7]]
     places.each do |place|
       x,y = place
-      @grid[x][y] = Pawn.new(place, color, self)
+      @grid[x][y] = Pawn.new(place, color, self, direction, true)
     end
   end
 
@@ -33,8 +33,8 @@ class Board
 
   def set_up_grid
     place_other_pieces(0, :white)
-    place_row_pawns(1, :white)
-    place_row_pawns(6, :black)
+    place_row_pawns(1, :white, :down)
+    place_row_pawns(6, :black, :up)
     place_other_pieces(7, :black)
   end
 
@@ -73,7 +73,11 @@ class Board
     raise NoPieceAtPosition if piece.is_a?(NullPiece)
     @grid[x][y] = NullPiece.new
     x, y = end_pos
-    @grid[x][y] = piece.class.new(end_pos, piece.color, self)
+    if piece.class.is_a?(Pawn)
+      @grid[x][y] = Pawn.new(end_pos, piece.team, self, false, piece.direction)
+    else
+      @grid[x][y] = piece.class.new(end_pos, piece.team, self)
+    end
 
   end
 

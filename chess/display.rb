@@ -26,18 +26,23 @@ class Display
             color: piece.team }
           )
       end
+      # piece.to_s.colorize(color_options)
     end
+
   end
 
   def colors_for(i, j)
     if [i, j] == @cursor_pos
-      bg = :grey
+      bg = :light_cyan
+      pce = :black
     elsif (i + j).odd?
       bg = :light_black
+      pce = :white
     else
       bg = :light_white
+      pce = :black
     end
-    { background: bg, color: :default }
+    { background: bg, color: pce }
   end
 
   def render

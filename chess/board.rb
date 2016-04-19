@@ -1,8 +1,10 @@
 require_relative 'piece'
 require_relative 'errors'
+require 'byebug'
 
 class Board
-  attr_reader :grid
+  attr_reader :grid, :in_check
+  attr_accessor :current_player
 
   # LETTERS = {'a' => 0, 'b' => 1, 'c' => 2, 'd' => 3,
   #            'e' => 4, 'f' => 5, 'g' => 6, 'h' => 7,
@@ -10,6 +12,7 @@ class Board
 
   def initialize
     @grid = Array.new(8) { Array.new(8) { NullPiece.new } }
+    @in_check = false
     set_up_grid
   end
 
@@ -17,7 +20,7 @@ class Board
     places = [[row,0], [row,1], [row,2], [row,3], [row,4], [row,5], [row,6], [row,7]]
     places.each do |place|
       x,y = place
-      @grid[x][y] = Pawn.new(place, color, self, direction, true)
+      @grid[x][y] = Pawn.new(place, color, self, true, direction)
     end
   end
 
@@ -38,63 +41,69 @@ class Board
     place_other_pieces(7, :black)
   end
 
-  # def get_input_and_move
-  #   begin
-  #     puts "Move piece at ______ to position ______. e.g. f4,e2"
-  #     print "> "
-  #
-  #     start_and_end = split_input(gets.chomp.downcase)
-  #     start_and_end.map! { |pos| translate_move_to_array_pos(pos) }
-  #     start_pos, end_pos = start_and_end
-  #     move(start_pos, end_pos)
-  #   rescue => e
-  #     puts e.message
-  #     retry
-  #   end
-  # end
-  #
-  # def split_input(str)
-  #   start_and_end = str.strip.split(",")
-  #   raise WrongNumOfArgs unless start_and_end.length == 2
-  #   start_and_end
-  # end
-  #
-  # def translate_move_to_array_pos(pos_string)
-  #   coordinates = pos_string.split("")
-  #   raise NotABoardLetter unless LETTERS.keys.include?(coordinates.first)
-  #   raise NotABoardNumber unless coordinates.last.between?(1,8)
-  #
-  #   [LETTERS[coordinates.first], coordinates.last - 1]
-  # end
 
   def move(start_pos, end_pos)
     x, y = start_pos
+    w, z = end_pos
     piece = @grid[x][y]
-    raise NoPieceAtPosition if piece.is_a?(NullPiece)
-    @grid[x][y] = NullPiece.new
-    x, y = end_pos
-    if piece.class.is_a?(Pawn)
-      @grid[x][y] = Pawn.new(end_pos, piece.team, self, false, piece.direction)
-    else
-      @grid[x][y] = piece.class.new(end_pos, piece.team, self)
-    end
 
+    raise NotYourPiece if piece.team != @current_player
+    raise NoPieceAtPosition if piece.is_a?(NullPiece)
+    raise InvalidMove unless piece.moves.include?(end_pos)
+
+    # debugger
+    if piece.is_a?(Pawn)
+      @grid[w][z] = Pawn.new(end_pos, piece.team, self, false, piece.direction)
+    else
+      @grid[w][z] = piece.class.new(end_pos, piece.team, self)
+    end
+    @grid[x][y] = NullPiece.new
+
+    piece.team == :white ? enemy_color = :black : enemy_color = :white
+    if in_check?(enemy_color)
+      @in_check = enemy_color
+    else
+      @in_check = false
+    end
   end
 
-  # def mark_start(pos)
-  #   puts "Move this piece to WHERE??"
-  #   # highlight piece (piece.change_piece_color)
-  #
-  # end
-  #
-  # def mark_end(pos)
-  #   # change piece bolor back to how it were
-  # end
-  #
-  # def place_piece(pos, piece)
-  #   x, y = pos
-  #   @grid[x][y] = piece(pos)
-  # end
+  def in_check?(color)
+    color == :white ? opposite_color = :black : opposite_color = :white
+    king_position = nil
+    enemy_moves = []
+    # debugger
+    @grid.flatten.each do |piece|
+      # debugger if piece.nil?
+      if piece.is_a?(King) && piece.team == color
+        king_position = piece.pos
+      elsif piece.team == opposite_color
+        enemy_moves += piece.moves
+      end
+    end
+
+    enemy_moves.include?(king_position)
+  end
+
+  def checkmate?
+    return true if @in_check && valid_moves.empty?
+    false
+  end
+
+  def valid_moves
+    moves = []
+
+    @grid.flatten.each do |piece|
+      if piece.team == @current_player
+        moves += piece.moves
+      end
+    end
+
+    moves
+  end
+
+  def dup
+    #write this
+  end
 
   def [](pos)
     x, y = pos

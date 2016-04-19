@@ -18,27 +18,40 @@ end
 
 
 class Game
+  attr_reader :current_player
+
   def initialize
     @board = Board.new
     @player = Player.new(@board)
+    @current_player = :white
   end
 
   def run
-    puts "Mark all the spaces on the board!"
-    puts "Arrow keys to move the cursor, enter to confirm."
-    while true
+    until @board.checkmate?
       begin
+      set_current_player
       pos1 = @player.move
       pos2 = @player.move
       @board.move(pos1, pos2)
-      rescue => e
+      switch_player
+      rescue ChessError => e
         puts e.message
         sleep(2)
         retry
       end
     end
-    puts "Hooray, the board is filled!"
+    switch_player
+    puts "#{@current_player} wins!!!"
   end
+
+  def switch_player
+    @current_player == :white ? @current_player = :black : @current_player = :white
+  end
+
+  def set_current_player
+    @board.current_player = @current_player
+  end
+
 end
 
 

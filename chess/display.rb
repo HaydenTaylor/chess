@@ -1,5 +1,6 @@
 require "colorize"
 require_relative "cursorable"
+require_relative "game"
 
 class Display
   include Cursorable
@@ -48,6 +49,8 @@ class Display
   def render
     system("clear")
     puts "Arrow keys to move, enter to confirm."
+    puts "Current player: #{@board.current_player}"
     build_grid.each { |row| puts row.join }
+    puts "#{@board.in_check}'s king is in check!" if @board.in_check
   end
 end

@@ -1,22 +1,25 @@
-class WrongNumOfArgs < StandardError
+class ChessError < StandardError
+end
+
+class NotYourPiece < ChessError
   def message
-    "Game requires two positions. Format: a2,b5"
+    "Get your hands off the other guy's piece!"
   end
 end
 
-class NotABoardLetter < StandardError
+class InvalidMove < ChessError
   def message
-    "One or more row letter you gave does not belong on standard chess board (a-h)"
+    "You can't move that piece there!"
   end
 end
 
-class NotABoardNumber < StandardError
+class KingInCheck < ChessError
   def message
-    "One or more column numbers you gave does not belong on a standard chess board (1-8)"
+    "This move puts the enemy king in check!"
   end
 end
 
-class NoPieceAtPosition < StandardError
+class NoPieceAtPosition < ChessError
   def message
     "There's no piece at the position you entered."
   end

@@ -1,8 +1,7 @@
-require_relative 'board'
 require 'byebug'
 
 class Piece
-  attr_reader :team
+  attr_reader :team, :moves, :pos
 
   ORTHOGONALS = [[0,1], [0,-1], [1,0], [-1,0]]
   DIAGONALS = [[1,1], [1,-1], [-1,1], [-1,-1]]
@@ -26,7 +25,15 @@ class Piece
   end
 
   def moves
-    @moves
+    board_dup = @board.deep_clone #NEED TO DEEP DUP THIS
+    @moves.reject! do |move|
+      if self.is_a?(Pawn)
+        board_dup[move] = self.class.new(move, self.team, board_dup, self.direction, false)
+      else
+        board_dup[move] = self.class.new(move, self.team, board_dup)
+      end
+      board_dup.in_check?(team)
+    end
   end
 end
 
@@ -113,6 +120,7 @@ class Bishop < SlidingPiece
 
   def moves
     @moves = generate_moves(DIAGONALS)
+    super
   end
 end
 
@@ -126,6 +134,7 @@ class Queen < SlidingPiece
 
   def moves
     @moves = generate_moves(ORTHOGONALS) + generate_moves(DIAGONALS)
+    super
   end
 end
 
@@ -135,6 +144,7 @@ class Knight < SteppingPiece
 
   def moves
     @moves = generate_moves(KNIGHT_MOVES)
+    super
   end
 
   def to_s
@@ -145,22 +155,28 @@ class Knight < SteppingPiece
 end
 
 class King < SteppingPiece
-
   def moves
     @moves = generate_moves(ORTHOGONALS) + generate_moves(DIAGONALS)
+    super
   end
-
 
   def to_s
     # return " \u2654\a " if self.team == :white
     # " \u265A "
     " K "
   end
+
+  def inspect
+    "#{team} King"
+  end
 end
 
 #### A SINGLE LONELY PAWN
 
 class Pawn < Piece
+  attr_reader :first_move, :direction
+
+
   def initialize(pos, team, board, first_move, direction)
     super(pos, team, board)
     @first_move = first_move
@@ -172,31 +188,43 @@ class Pawn < Piece
     @direction == :up ? multiplier = -1 : multiplier = 1
 
     # check if can move double on first move
-    one_space_away = [@pos[0] + multiplier, @pos[1] ]
-    two_spaces_away = [@pos[0] + 2*multiplier, @pos[1]]
-    if @first_move && @board[one_space_away].team == :null && @board[two_spaces_away].team == :null
-      candidate_moves << [ @pos[0] + 2*multiplier, @pos[1]  ]
+    unless self.first_move == false
+      one_space_away = [@pos[0] + multiplier, @pos[1] ]
+      two_spaces_away = [@pos[0] + 2*multiplier, @pos[1]]
+      if @first_move && @board[one_space_away].team == :null && @board[two_spaces_away].team == :null
+        candidate_moves << [ @pos[0] + 2*multiplier, @pos[1]  ]
+      end
     end
 
     # left enemy check
     new_pos = [@pos[0] + multiplier, @pos[1] - 1]
-    if @board[new_pos].team != self.team && @board[new_pos].team != :null
-      candidate_moves << new_pos
+    piece_at_pos = @board[new_pos]
+    if piece_at_pos
+      if piece_at_pos.team != self.team && piece_at_pos.team != :null
+        candidate_moves << new_pos
+      end
     end
 
     # second corner enemy check
     new_pos = [@pos[0] + multiplier, @pos[1] + 1]
-    if @board[new_pos].team != self.team && @board[new_pos].team != :null
-      candidate_moves << new_pos
+    piece_at_pos = @board[new_pos]
+    if piece_at_pos
+      if piece_at_pos.team != self.team && piece_at_pos.team != :null
+        candidate_moves << new_pos
+      end
     end
 
     # regular move
     new_pos = [@pos[0] + multiplier, @pos[1]]
-    if @board[new_pos].team == :null
-      candidate_moves << new_pos
+    piece_at_pos = @board[new_pos]
+    if piece_at_pos
+      if piece_at_pos.team == :null
+        candidate_moves << new_pos
+      end
     end
 
     @moves = candidate_moves
+    super
   end
 
   def to_s

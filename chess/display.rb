@@ -23,7 +23,7 @@ class Display
       else
         piece.to_s.colorize(
           { background: color_options[:background],
-            color: piece.color }
+            color: piece.team }
           )
       end
     end
@@ -33,11 +33,11 @@ class Display
     if [i, j] == @cursor_pos
       bg = :grey
     elsif (i + j).odd?
-      bg = :black
+      bg = :light_black
     else
-      bg = :white
+      bg = :light_white
     end
-    { background: bg, color: :white }
+    { background: bg, color: :default }
   end
 
   def render
